@@ -23,6 +23,11 @@ typedef struct {
 } Move;
 typedef vector<Move> PossibleMoves;
 
+typedef struct {
+    uint8_t current;
+    uint8_t max;
+}  Depth;
+
 ostream& operator<<(ostream &os, const Dice &dice) {
     os << static_cast<int>(dice);
     return os;
@@ -67,7 +72,7 @@ bool is_solved(const Grid &grid);
 void add_to_solve(const Grid &grid, Solutions &solutions);
 BoardHash get_solution(const Grid &grid);
 PossibleMoves get_possible_moves(const Grid &grid);
-Solutions check_all_moves(const Grid &grid);
+Solutions check_all_moves(const Grid &grid, const Depth &depth);
 
 
 // there is a board with a certain number of free moves, I need to explore all
@@ -91,7 +96,7 @@ int main()
 
     cerr << "DEPTH " << depth << endl;
     cerr << "GRID\n" << grid << endl;
-    auto solutions = check_all_moves(grid);
+    auto solutions = check_all_moves(grid, {static_cast<uint8_t>(depth), 0});
     cerr << "CHECK ALL MOVES\n" << solutions << endl;
 
 
@@ -133,8 +138,8 @@ Grid do_move(const Grid &grid, const Move &move) {
     return newGrid;
 }
 
-Solutions check_all_moves(const Grid &grid) {
-    if (is_solved(grid))
+Solutions check_all_moves(const Grid &grid, const Depth &depth) {
+    if (is_solved(grid) || depth.current <= depth.max)
         return {get_solution(grid)};
 
     Solutions solutions;
@@ -143,7 +148,8 @@ Solutions check_all_moves(const Grid &grid) {
 
     for (const auto & move : possibleMoves) {
         auto newGrid = do_move(grid, move);
-        auto newSolutions = check_all_moves(newGrid);
+        auto newSolutions = check_all_moves(newGrid
+                ,{static_cast<uint8_t>(depth.current + 1), depth.max});
 
         if (newSolutions.size() != 0)
             solutions.insert(solutions.end()
