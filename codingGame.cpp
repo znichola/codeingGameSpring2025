@@ -11,21 +11,21 @@ using namespace std;
  **/
 
 typedef uint8_t Cell;
-typedef vector<Cell> Line;
-typedef vector<Line> Grid;
+typedef vector<Cell> Grid;
 
 typedef uint32_t BoardHash;
 typedef vector<BoardHash> Solutions;
 
+ostream& operator<<(ostream& os, const Cell cell) {
+    os << static_cast<int>(cell);
+    return os;
+}
+
 ostream& operator<<(ostream& os, const Grid& grid) {
-    for (const Line& line : grid) {
-        for (size_t i = 0; i < line.size(); ++i) {
-            os << static_cast<int>(line[i]);
-            if (i != line.size() - 1) {
-                os << " ";
-            }
-        }
-        os << '\n';
+    for (int i = 0; i < 9; i++) {
+        os << grid[i];
+        if ((i + 1) % 3 == 0) os << '\n';
+        else os << ' ';
     }
     return os;
 }
@@ -50,14 +50,10 @@ int main()
     int depth;
     Grid grid;
     cin >> depth; cin.ignore();
-    for (int i = 0; i < 3; i++) {
-        Line line;
-        for (int j = 0; j < 3; j++) {
-            int value;
-            cin >> value; cin.ignore();
-            line.push_back(value);
-        }
-        grid.push_back(line);
+    for (int i = 0; i < 9; i++) {
+        int value;
+        cin >> value; cin.ignore();
+        grid.push_back(value);
     }
 
 
@@ -76,24 +72,21 @@ int main()
 }
 
 bool is_solved(const Grid &grid) {
-    for (const auto &line : grid) {
-        for (const auto &c: line) {
-            if (c == 0) return false;
-        }
-    }
+    for (const auto &c : grid)
+        if (c == 0) return false;
     return true;
 }
 
 void add_to_solve(const Grid &grid, Solutions &solutions) {
-    int number = grid[0][0] * 100000000 +
-                 grid[0][1] * 10000000 +
-                 grid[0][2] * 1000000 +
-                 grid[1][0] * 100000 +
-                 grid[1][1] * 10000 +
-                 grid[1][2] * 1000 +
-                 grid[2][0] * 100 +
-                 grid[2][1] * 10 +
-                 grid[2][2];
+    int number = grid[0] * 100000000 +
+                 grid[1] * 10000000 +
+                 grid[2] * 1000000 +
+                 grid[3] * 100000 +
+                 grid[4] * 10000 +
+                 grid[5] * 1000 +
+                 grid[6] * 100 +
+                 grid[7] * 10 +
+                 grid[8];
 
     solutions.push_back(number);
 }
