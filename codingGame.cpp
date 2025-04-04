@@ -10,18 +10,25 @@ using namespace std;
  * the standard input according to the problem statement.
  **/
 
-typedef uint8_t Cell;
-typedef vector<Cell> Grid;
+typedef uint8_t Dice;
+typedef vector<Dice> Grid;
 
 typedef uint32_t BoardHash;
 typedef vector<BoardHash> Solutions;
 
-ostream& operator<<(ostream& os, const Cell cell) {
-    os << static_cast<int>(cell);
+typedef uint8_t Pos;
+typedef struct {
+    Pos pos;
+    Dice dice;
+} Move;
+typedef vector<Move> PossibleMoves;
+
+ostream& operator<<(ostream &os, const Dice &dice) {
+    os << static_cast<int>(dice);
     return os;
 }
 
-ostream& operator<<(ostream& os, const Grid& grid) {
+ostream& operator<<(ostream &os, const Grid &grid) {
     for (int i = 0; i < 9; i++) {
         os << grid[i];
         if ((i + 1) % 3 == 0) os << '\n';
@@ -30,15 +37,37 @@ ostream& operator<<(ostream& os, const Grid& grid) {
     return os;
 }
 
+ostream& operator<<(ostream &os, const Move &move) {
+    return os << '[' << move.pos << ' ' << move.dice << "] ";
+}
+
+ostream& operator<<(ostream &os, const Solutions &solutions) {
+    os << '[';
+    for (const auto & s : solutions)
+        os << s << ", ";
+    os << ']';
+    return os;
+}
+
+ostream& operator<<(ostream &os, const PossibleMoves &pm) {
+    for (const auto & p : pm)
+        os << p;
+    return os;
+}
+
 
 // is_solved :: Grid -> Boolean
-// add_to_solve :: (Solutions Grid) -> Solutions
+// get_solution :: Grid -> BoardHash
 // get_possible_moves :: Grid -> PossibleMoves
+// do_move :: (Grid Move) -> Grid
 // check_all_moves :: (Grid Depth Solutions) -> Solutions
 
 
 bool is_solved(const Grid &grid);
 void add_to_solve(const Grid &grid, Solutions &solutions);
+BoardHash get_solution(const Grid &grid);
+PossibleMoves get_possible_moves(const Grid &grid);
+Solutions check_all_moves(const Grid &grid);
 
 
 // there is a board with a certain number of free moves, I need to explore all
@@ -62,9 +91,9 @@ int main()
 
     cerr << "DEPTH " << depth << endl;
     cerr << "GRID\n" << grid << endl;
-    Solutions s;
-    add_to_solve(grid, s);
-    cerr << "HASH " << s[0] << endl;
+    auto solutions = check_all_moves(grid);
+    cerr << "CHECK ALL MOVES\n" << solutions << endl;
+
 
 
     cerr << "OUTPUT" << endl;
@@ -77,18 +106,51 @@ bool is_solved(const Grid &grid) {
     return true;
 }
 
-void add_to_solve(const Grid &grid, Solutions &solutions) {
-    int number = grid[0] * 100000000 +
-                 grid[1] * 10000000 +
-                 grid[2] * 1000000 +
-                 grid[3] * 100000 +
-                 grid[4] * 10000 +
-                 grid[5] * 1000 +
-                 grid[6] * 100 +
-                 grid[7] * 10 +
-                 grid[8];
-
-    solutions.push_back(number);
+BoardHash get_solution(const Grid &grid) {
+    return grid[0] * 100000000 +
+           grid[1] * 10000000 +
+           grid[2] * 1000000 +
+           grid[3] * 100000 +
+           grid[4] * 10000 +
+           grid[5] * 1000 +
+           grid[6] * 100 +
+           grid[7] * 10 +
+           grid[8];
 }
 
+PossibleMoves get_possible_moves(const Grid &grid) {
+    PossibleMoves pm;
+    for (Pos i = 0; i < 9; i++) {
+        if (grid[i] == 0) pm.push_back({i, 1});
+    }
+    // expand with more filler moves - it gets complicated here
+    return pm;
+}
+
+Grid do_move(const Grid &grid, const Move &move) {
+    auto newGrid = grid;
+    newGrid[move.pos] = move.dice;
+    return newGrid;
+}
+
+Solutions check_all_moves(const Grid &grid) {
+    if (is_solved(grid))
+        return {get_solution(grid)};
+
+    Solutions solutions;
+
+    auto possibleMoves = get_possible_moves(grid);
+
+    for (const auto & move : possibleMoves) {
+        auto newGrid = do_move(grid, move);
+        auto newSolutions = check_all_moves(newGrid);
+
+        if (newSolutions.size() != 0)
+            solutions.insert(solutions.end()
+                            ,newSolutions.begin()
+                            ,newSolutions.end()
+                            );
+    }
+    return solutions;
+}
 
