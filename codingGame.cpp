@@ -10,7 +10,8 @@ using namespace std;
  * the standard input according to the problem statement.
  **/
 
-typedef vector<uint8_t> Line;
+typedef uint8_t Cell;
+typedef vector<Cell> Line;
 typedef vector<Line> Grid;
 
 typedef uint32_t BoardHash;
@@ -19,7 +20,7 @@ typedef vector<BoardHash> Solutions;
 ostream& operator<<(ostream& os, const Grid& grid) {
     for (const Line& line : grid) {
         for (size_t i = 0; i < line.size(); ++i) {
-            os << line[i];
+            os << static_cast<int>(line[i]);
             if (i != line.size() - 1) {
                 os << " ";
             }
@@ -36,6 +37,7 @@ ostream& operator<<(ostream& os, const Grid& grid) {
 // check_all_moves :: (Grid Depth Solutions) -> Solutions
 
 
+bool is_solved(const Grid &grid);
 void add_to_solve(const Grid &grid, Solutions &solutions);
 
 
@@ -51,7 +53,7 @@ int main()
     for (int i = 0; i < 3; i++) {
         Line line;
         for (int j = 0; j < 3; j++) {
-            int8_t value;
+            int value;
             cin >> value; cin.ignore();
             line.push_back(value);
         }
@@ -74,8 +76,8 @@ int main()
 }
 
 bool is_solved(const Grid &grid) {
-    for (const auto line : grid) {
-        for (const auto c: line) {
+    for (const auto &line : grid) {
+        for (const auto &c: line) {
             if (c == 0) return false;
         }
     }
@@ -93,8 +95,6 @@ void add_to_solve(const Grid &grid, Solutions &solutions) {
                  grid[2][1] * 10 +
                  grid[2][2];
 
-    cout < grid[0][0] << endl;
-    cout << static_cast<int>(grid[0][0]) * 100000000 << endl;
     solutions.push_back(number);
 }
 
