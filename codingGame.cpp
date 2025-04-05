@@ -10,16 +10,28 @@ using namespace std;
  * the standard input according to the problem statement.
  **/
 
-typedef uint8_t Dice;
+typedef uint8_t Dice; // should be between 0..7, but idk how to type it
 typedef vector<Dice> Grid;
 
 typedef uint32_t BoardHash;
 typedef vector<BoardHash> Solutions;
 
-typedef uint8_t Pos;
+typedef uint8_t Pos; // should be between 0..9, but idk how to type it
+typedef vector<Pos> Neighbours; // limited to 0..4, as above
+typedef Neighbours Captures;
+
+enum {
+    N = 1,
+    E = 1 << 1,
+    S = 1 << 2,
+    W = 1 << 3,
+};
+typedef uint8_t CaptureMask;
+
 typedef struct {
     Pos pos;
     Dice dice;
+    Captures captures = {0};
 } Move;
 typedef vector<Move> PossibleMoves;
 
@@ -29,6 +41,7 @@ typedef struct {
 }  Depth;
 
 typedef unsigned long long Result;
+
 
 ostream& operator<<(ostream &os, const Dice &dice) {
     os << static_cast<int>(dice);
@@ -68,12 +81,15 @@ ostream& operator<<(ostream &os, const PossibleMoves &pm) {
 // get_possible_moves :: Grid -> PossibleMoves
 // do_move :: (Grid Move) -> Grid
 // check_all_moves :: (Grid Depth Solutions) -> Solutions
+// get_neighbours :: Pos -> Neighbours
 
 
          bool is_solved(const Grid &grid);
     BoardHash get_solution(const Grid &grid);
 PossibleMoves get_possible_moves(const Grid &grid);
     Solutions check_all_moves(const Grid &grid, const Depth &depth);
+   Neighbours get_neighbours(Pos pos);
+
 
 unsigned long long get_result(const Solutions &solutions);
 
@@ -127,8 +143,18 @@ PossibleMoves get_possible_moves(const Grid &grid) {
     PossibleMoves pm;
     for (Pos i = 0; i < 9; i++) {
         if (grid[i] == 0) pm.push_back({i, 1});
+
+        cout << "NEIGHBOURS" << endl;
+        auto neighbours = get_neighbours(i);
+        for (auto n : neighbours)
+            cout << n << " ";
+        cout << endl;
+
     }
     // expand with more filler moves - it gets complicated here
+
+
+
     return pm;
 }
 
@@ -166,5 +192,39 @@ Result get_result(const Solutions &solutions) {
         final_sum = (final_sum + static_cast<Result>(s)) % (1 << 30);
     }
     return final_sum;
+}
+
+// 0 1 2
+// 3 4 5
+// 6 7 8
+
+Neighbours get_neighbours(Pos pos) {
+    switch (pos) {
+        case 0 : return {1, 3};
+        case 1 : return {2, 4, 0};
+        case 2 : return {5, 1};
+        case 3 : return {0, 4, 6};
+        case 4 : return {1, 5, 7, 3};
+        case 5 : return {2, 8, 4};
+        case 6 : return {3, 7};
+        case 7 : return {4, 8, 6};
+        case 8 : return {5, 7};
+    }
+    throw runtime_error("Pos out of range!");
+}
+
+CaptureMask get_cardinals(Pos pos) {
+    switch (pos) {
+        case 0 : return     E | S    ;
+        case 1 : return     E | S | W;
+        case 2 : return         S | W;
+        case 3 : return N | E | S    ;
+        case 4 : return N | E | S | W;
+        case 5 : return N |     S | W;
+        case 6 : return N | E        ;
+        case 7 : return N | E |     W;
+        case 8 : return N |         W;
+    }
+    throw runtime_error("Pos out of range!");
 }
 
