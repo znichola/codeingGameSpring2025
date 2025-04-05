@@ -28,6 +28,8 @@ typedef struct {
     uint8_t max;
 }  Depth;
 
+typedef unsigned long long Result;
+
 ostream& operator<<(ostream &os, const Dice &dice) {
     os << static_cast<int>(dice);
     return os;
@@ -68,11 +70,10 @@ ostream& operator<<(ostream &os, const PossibleMoves &pm) {
 // check_all_moves :: (Grid Depth Solutions) -> Solutions
 
 
-bool is_solved(const Grid &grid);
-void add_to_solve(const Grid &grid, Solutions &solutions);
-BoardHash get_solution(const Grid &grid);
+         bool is_solved(const Grid &grid);
+    BoardHash get_solution(const Grid &grid);
 PossibleMoves get_possible_moves(const Grid &grid);
-Solutions check_all_moves(const Grid &grid, const Depth &depth);
+    Solutions check_all_moves(const Grid &grid, const Depth &depth);
 
 unsigned long long get_result(const Solutions &solutions);
 
@@ -100,12 +101,8 @@ int main()
     auto solutions = check_all_moves(grid, {0, static_cast<uint8_t>(depth)});
     cerr << "CHECK ALL MOVES\n" << solutions << endl;
 
-
-
-    cerr << "OUTPUT" << endl;
+    cerr << "\nOUTPUT" << endl;
     cout << get_result(solutions) << endl;
-    cerr << "322444322" << endl;
-    // cout << "0" << endl;
 }
 
 bool is_solved(const Grid &grid) {
@@ -163,10 +160,10 @@ Solutions check_all_moves(const Grid &grid, const Depth &depth) {
     return solutions;
 }
 
-unsigned long long get_result(const Solutions &solutions) {
-    unsigned long long final_sum = 0;
+Result get_result(const Solutions &solutions) {
+    Result final_sum = 0;
     for (const auto &s : solutions) {
-        final_sum = (final_sum + static_cast<unsigned long long>(s)) % (1 << 30);
+        final_sum = (final_sum + static_cast<Result>(s)) % (1 << 30);
     }
     return final_sum;
 }
