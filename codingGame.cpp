@@ -74,6 +74,7 @@ BoardHash get_solution(const Grid &grid);
 PossibleMoves get_possible_moves(const Grid &grid);
 Solutions check_all_moves(const Grid &grid, const Depth &depth);
 
+unsigned long long get_result(const Solutions &solutions);
 
 // there is a board with a certain number of free moves, I need to explore all
 // posibilites of doing these moves. so backtracking and later some optimization.
@@ -96,13 +97,15 @@ int main()
 
     cerr << "DEPTH " << depth << endl;
     cerr << "GRID\n" << grid << endl;
-    auto solutions = check_all_moves(grid, {static_cast<uint8_t>(depth), 0});
+    auto solutions = check_all_moves(grid, {0, static_cast<uint8_t>(depth)});
     cerr << "CHECK ALL MOVES\n" << solutions << endl;
 
 
 
     cerr << "OUTPUT" << endl;
-    cout << "0" << endl;
+    cout << get_result(solutions) << endl;
+    cerr << "322444322" << endl;
+    // cout << "0" << endl;
 }
 
 bool is_solved(const Grid &grid) {
@@ -139,7 +142,7 @@ Grid do_move(const Grid &grid, const Move &move) {
 }
 
 Solutions check_all_moves(const Grid &grid, const Depth &depth) {
-    if (is_solved(grid) || depth.current <= depth.max)
+    if (is_solved(grid) || depth.current >= depth.max)
         return {get_solution(grid)};
 
     Solutions solutions;
@@ -158,5 +161,13 @@ Solutions check_all_moves(const Grid &grid, const Depth &depth) {
                             );
     }
     return solutions;
+}
+
+unsigned long long get_result(const Solutions &solutions) {
+    unsigned long long final_sum = 0;
+    for (const auto &s : solutions) {
+        final_sum = (final_sum + static_cast<unsigned long long>(s)) % (1 << 30);
+    }
+    return final_sum;
 }
 
