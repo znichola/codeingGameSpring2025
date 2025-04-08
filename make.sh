@@ -1,4 +1,5 @@
 CFLAGS="-Wall -Wextra -Werror"
+CFLAGS=""
 
 rm -f ceph
 

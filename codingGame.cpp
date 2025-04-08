@@ -163,8 +163,13 @@ PossibleMoves get_possible_moves(const Grid &grid) {
             cout << "NEIGHBOURS for i:" << i << endl;
             auto n = get_neighbours(i, grid);
             auto pm2 = do_all_summs(n, i);
-            cout << "\nSUMMS " << pm2 << endl;
-            // pm.insert(pm.end(), pm2.begin(), pm2.end());
+            for (auto z : pm2) {
+                cout << "SUMMS ";
+                for (auto y : z.captures)
+                    cout << y << " ";
+                cout << "\n";
+            }
+            pm.insert(pm.end(), pm2.begin(), pm2.end());
         }
 
     }
@@ -172,19 +177,16 @@ PossibleMoves get_possible_moves(const Grid &grid) {
     return pm;
 }
 
-PossibleMoves get_capture_moves(const Grid &grid, const Pos &pos) {
-    auto nn = get_neighbours(pos, grid);
-    (void)nn;
-    return {};
-}
+// 0 1 2
+// 3 4 5
+// 6 7 8
 
 // n e s w
-PossibleMoves do_all_summs(const Neighbours &n, Grid &g, Pos i) {
+PossibleMoves do_all_summs(const Neighbours &n, Pos i) {
     PossibleMoves pm;
 
-    auto sum = {
-        {
-        n[0] + n[1] + n[2] + n[3]},
+    array<int, 11> sum = {
+        n[0] + n[1] + n[2] + n[3],
 
         n[0] + n[1] + n[2],
         n[1] + n[2] + n[3],
@@ -198,30 +200,35 @@ PossibleMoves do_all_summs(const Neighbours &n, Grid &g, Pos i) {
         n[1] + n[3],
         n[2] + n[3],
     };
-    auto capturePos = {
-        N | E | S | W,
+    //auto capturePos = {
+    array<vector<uint8_t>, 11> capturePos = {{
+    //   N     E    S    W
+        {i-3, i+1, i+3, i-1},
 
-        N | E | S    ,
-            E | S | W,
-        N |     S | W,
-        N | E |     W,
+        {i-3, i+1, i+3},
+        {i+1, i+3, i-1},
+        {i-3, i+3, i-1},
+        {i-3, i+1, i-1},
 
-        N | E,
-        N | S,
-        N | W,
-        E | S,
-        E | W,
-        S | W
-    };
+        {i-3, i+1},
+        {i-3, i+3},
+        {i-3, i-1},
+        {i+1, i+3},
+        {i+1, i-1},
+        {i+3, i-1}
+    }};
 
-    for (auto s: sum) {
+    for (int i = 0; i < 9; i++) {
+        int s = sum[i];
+        auto c = capturePos[i];
         if (s > 0 && s <= 6) {
-            auto p =get_capture_pos(i);
-            cout << "\nTHING sum: " << s << " captures: ";
-            for (auto z : p)
-                cout << static_cast<Dice>(z) << " ";
-            cout << endl;
-            pm.push_back({i, static_cast<Dice>(s), get_capture_pos(i)});
+            // cout << "\nTHING sum: " << s << " captures: ";
+            // for (auto z : c)
+            //    cout << static_cast<Dice>(z) << " ";
+            // cout << endl;
+            pm.push_back({i
+                    ,static_cast<Dice>(s)
+                    ,c});
         }
     }
     return pm;
@@ -275,7 +282,7 @@ Neighbours get_neighbours(const Pos pos, const Grid &grid) {
     for (auto & i : g) {
         if (i == 0) i = 7;
     }
-    cout << "NEW GRID: \n" << g << endl;
+    // cout << "NEW GRID: \n" << g << endl;
     switch (pos) {
         case 0 : return {  7 , g[1], g[3],   7 };
         case 1 : return {  7 , g[2], g[4], g[0]};
