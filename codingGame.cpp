@@ -19,7 +19,7 @@ using namespace std;
  **/
 
 typedef uint8_t Dice; // should be between 0..7, but idk how to type it
-typedef vector<Dice> Grid;
+typedef array<Dice, 9> Grid;
 
 typedef uint32_t BoardHash;
 typedef vector<BoardHash> Solutions;
@@ -31,7 +31,14 @@ typedef struct {
    Dice s;
    Dice w;
 } Neighbours; // limited to 0..4, as above
-typedef Neighbours Captures;
+              //
+typedef struct {
+    Dice dice;
+    Pos pos;
+} Capture;
+
+
+typedef array<Pos, 4> Captures;
 
 enum {
     N = 1,
@@ -44,7 +51,7 @@ typedef uint8_t CaptureMask;
 typedef struct {
     Pos pos;
     Dice dice;
-    Captures captures = {11, 11, 11, 11};
+    Captures captures = {11};
 } Move;
 typedef vector<Move> PossibleMoves;
 
@@ -155,25 +162,46 @@ BoardHash get_solution(const Grid &grid) {
 PossibleMoves get_possible_moves(const Grid &grid) {
     PossibleMoves pm;
     for (Pos i = 0; i < 9; i++) {
-        if (grid[i] == 0) pm.push_back({i, 1});
+        if (grid[i] == 0) {
+            pm.push_back({i, 1});
 
-        cout << "NEIGHBOURS" << endl;
-        auto neighbours = get_neighbours(i, grid);
-        Dice * nn = reinterpret_cast<Dice *>(&neighbours);
+            // get my neighours
+            // sort them in order
+            // find combinaions that equal all sums
+            // push each combination
+            // TODO STOP with the pre optimization! just sole the damn thing
 
-        for (uint8_t i = 0; i < 4; i++) {
-            cout << static_cast<int>(nn[i]) << ", ";
+            cout << "NEIGHBOURS" << endl;
+            auto neighbours = get_neighbours(i, grid);
+            Dice * nn = reinterpret_cast<Dice *>(&neighbours);
+
+            for (uint8_t i = 0; i < 4; i++) {
+                cout << static_cast<int>(nn[i]) << ", ";
+            }
+            cout << endl;
+
+            // n = get_neightbours(i, grid);
+            // ns = sort(n)
+            // pm += combination_moves(ns)
         }
-        cout << endl;
 
     }
     // expand with more filler moves - it gets complicated here
     return pm;
 }
 
+PossibleMoves get_capture_moves(const Grid &grid, const Pos &pos) {
+    auto nn = get_neighbours(pos, grid);
+    (void)nn;
+    return {};
+}
+
 Grid do_move(const Grid &grid, const Move &move) {
     auto newGrid = grid;
     newGrid[move.pos] = move.dice;
+    for (const auto & c : move.captures)
+        if (c != 11)
+            newGrid[c] = 0;
     return newGrid;
 }
 
@@ -213,6 +241,21 @@ Result get_result(const Solutions &solutions) {
 
 Neighbours get_neighbours(const Pos pos, const Grid &g) {
     switch (pos) {
+        case 0 : return {  0 , g[1], g[3],   0 };
+        case 1 : return {  0 , g[2], g[4], g[0]};
+        case 2 : return {  0 ,   0 , g[5], g[1]};
+        case 3 : return {g[0], g[4], g[6],   0 };
+        case 4 : return {g[1], g[5], g[7], g[3]};
+        case 5 : return {g[2],   0 , g[8], g[4]};
+        case 6 : return {g[3], g[7],   0 ,   0 };
+        case 7 : return {g[4], g[8],   0 , g[6]};
+        case 8 : return {g[5],   0 ,   0 , g[7]};
+    }
+    throw runtime_error("Pos out of range!");
+}
+
+Neighbours get_neighbours3(const Pos pos, const Grid &g) {
+    switch (pos) {
         case 0 : return {11, g[1], g[3], 11};
         case 1 : return {11, g[2], g[4], g[0]};
         case 2 : return {11, 11, g[5], g[1]};
@@ -225,6 +268,22 @@ Neighbours get_neighbours(const Pos pos, const Grid &g) {
     }
     throw runtime_error("Pos out of range!");
 }
+
+Neighbours get_neighbours2(const Pos pos, const Grid &g) {
+    switch (pos) {
+        case 0 : return {11, g[1], g[3], 11};
+        case 1 : return {11, g[2], g[4], g[0]};
+        case 2 : return {11, 11, g[5], g[1]};
+        case 3 : return {g[0], g[4], g[6], 11};
+        case 4 : return {g[1], g[5], g[7], g[3]};
+        case 5 : return {g[2], 11, g[8], g[4]};
+        case 6 : return {g[3], g[7], 11, 11};
+        case 7 : return {g[4], g[8], 11, g[6]};
+        case 8 : return {g[5], 11, 11, g[7]};
+    }
+    throw runtime_error("Pos out of range!");
+}
+
 
 CaptureMask get_cardinals(Pos pos) {
     switch (pos) {
