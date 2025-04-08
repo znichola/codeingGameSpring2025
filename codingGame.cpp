@@ -179,11 +179,12 @@ PossibleMoves get_capture_moves(const Grid &grid, const Pos &pos) {
 }
 
 // n e s w
-PossibleMoves do_all_summs(const Neighbours &n, Pos i) {
+PossibleMoves do_all_summs(const Neighbours &n, Grid &g, Pos i) {
     PossibleMoves pm;
 
     auto sum = {
-        n[0] + n[1] + n[2] + n[3],
+        {
+        n[0] + n[1] + n[2] + n[3]},
 
         n[0] + n[1] + n[2],
         n[1] + n[2] + n[3],
@@ -197,9 +198,29 @@ PossibleMoves do_all_summs(const Neighbours &n, Pos i) {
         n[1] + n[3],
         n[2] + n[3],
     };
+    auto capturePos = {
+        N | E | S | W,
+
+        N | E | S    ,
+            E | S | W,
+        N |     S | W,
+        N | E |     W,
+
+        N | E,
+        N | S,
+        N | W,
+        E | S,
+        E | W,
+        S | W
+    };
+
     for (auto s: sum) {
         if (s > 0 && s <= 6) {
-            cout << "\nTHING " << s << " two\n" << get_capture_pos(i);
+            auto p =get_capture_pos(i);
+            cout << "\nTHING sum: " << s << " captures: ";
+            for (auto z : p)
+                cout << static_cast<Dice>(z) << " ";
+            cout << endl;
             pm.push_back({i, static_cast<Dice>(s), get_capture_pos(i)});
         }
     }
@@ -249,17 +270,22 @@ Result get_result(const Solutions &solutions) {
 // 3 4 5
 // 6 7 8
 
-Neighbours get_neighbours(const Pos pos, const Grid &g) {
+Neighbours get_neighbours(const Pos pos, const Grid &grid) {
+    auto g(grid);
+    for (auto & i : g) {
+        if (i == 0) i = 7;
+    }
+    cout << "NEW GRID: \n" << g << endl;
     switch (pos) {
-        case 0 : return {  0 , g[1], g[3],   0 };
-        case 1 : return {  0 , g[2], g[4], g[0]};
-        case 2 : return {  0 ,   0 , g[5], g[1]};
-        case 3 : return {g[0], g[4], g[6],   0 };
+        case 0 : return {  7 , g[1], g[3],   7 };
+        case 1 : return {  7 , g[2], g[4], g[0]};
+        case 2 : return {  7 ,   7 , g[5], g[1]};
+        case 3 : return {g[0], g[4], g[6],   7 };
         case 4 : return {g[1], g[5], g[7], g[3]};
-        case 5 : return {g[2],   0 , g[8], g[4]};
-        case 6 : return {g[3], g[7],   0 ,   0 };
-        case 7 : return {g[4], g[8],   0 , g[6]};
-        case 8 : return {g[5],   0 ,   0 , g[7]};
+        case 5 : return {g[2],   7 , g[8], g[4]};
+        case 6 : return {g[3], g[7],   7 ,   7 };
+        case 7 : return {g[4], g[8],   7 , g[6]};
+        case 8 : return {g[5],   7 ,   7 , g[7]};
     }
     throw runtime_error("Pos out of range!");
 }
