@@ -19,26 +19,20 @@ using namespace std;
  **/
 
 typedef uint8_t Dice; // should be between 0..7, but idk how to type it
-typedef array<Dice, 9> Grid;
+typedef vector<Dice> Grid;
 
 typedef uint32_t BoardHash;
 typedef vector<BoardHash> Solutions;
 
 typedef uint8_t Pos; // should be between 0..9, but idk how to type it
-typedef struct {
-   Dice n;
-   Dice e;
-   Dice s;
-   Dice w;
-} Neighbours; // limited to 0..4, as above
-              //
+typedef array<Dice, 4> Neighbours; // limited to 0..4, as above
 typedef struct {
     Dice dice;
     Pos pos;
 } Capture;
 
 
-typedef array<Pos, 4> Captures;
+typedef vector<Pos> Captures; // TODO switch to array<Pos, 4> for speed!
 
 enum {
     N = 1,
@@ -51,7 +45,7 @@ typedef uint8_t CaptureMask;
 typedef struct {
     Pos pos;
     Dice dice;
-    Captures captures = {11};
+    Captures captures = {};
 } Move;
 typedef vector<Move> PossibleMoves;
 
@@ -109,7 +103,8 @@ ostream& operator<<(ostream &os, const PossibleMoves &pm) {
 PossibleMoves get_possible_moves(const Grid &grid);
     Solutions check_all_moves(const Grid &grid, const Depth &depth);
    Neighbours get_neighbours(const Pos pos, const Grid &grid);
-
+     Captures get_capture_pos(const Pos pos);
+PossibleMoves do_all_summs(const Neighbours &n, Pos i);
 
 unsigned long long get_result(const Solutions &solutions);
 
@@ -165,24 +160,11 @@ PossibleMoves get_possible_moves(const Grid &grid) {
         if (grid[i] == 0) {
             pm.push_back({i, 1});
 
-            // get my neighours
-            // sort them in order
-            // find combinaions that equal all sums
-            // push each combination
-            // TODO STOP with the pre optimization! just sole the damn thing
-
-            cout << "NEIGHBOURS" << endl;
-            auto neighbours = get_neighbours(i, grid);
-            Dice * nn = reinterpret_cast<Dice *>(&neighbours);
-
-            for (uint8_t i = 0; i < 4; i++) {
-                cout << static_cast<int>(nn[i]) << ", ";
-            }
-            cout << endl;
-
-            // n = get_neightbours(i, grid);
-            // ns = sort(n)
-            // pm += combination_moves(ns)
+            cout << "NEIGHBOURS for i:" << i << endl;
+            auto n = get_neighbours(i, grid);
+            auto pm2 = do_all_summs(n, i);
+            cout << "\nSUMMS " << pm2 << endl;
+            // pm.insert(pm.end(), pm2.begin(), pm2.end());
         }
 
     }
@@ -196,12 +178,39 @@ PossibleMoves get_capture_moves(const Grid &grid, const Pos &pos) {
     return {};
 }
 
+// n e s w
+PossibleMoves do_all_summs(const Neighbours &n, Pos i) {
+    PossibleMoves pm;
+
+    auto sum = {
+        n[0] + n[1] + n[2] + n[3],
+
+        n[0] + n[1] + n[2],
+        n[1] + n[2] + n[3],
+        n[0] + n[2] + n[3],
+        n[0] + n[1] + n[3],
+
+        n[0] + n[1],
+        n[0] + n[2],
+        n[0] + n[3],
+        n[1] + n[2],
+        n[1] + n[3],
+        n[2] + n[3],
+    };
+    for (auto s: sum) {
+        if (s > 0 && s <= 6) {
+            cout << "\nTHING " << s << " two\n" << get_capture_pos(i);
+            pm.push_back({i, static_cast<Dice>(s), get_capture_pos(i)});
+        }
+    }
+    return pm;
+}
+
 Grid do_move(const Grid &grid, const Move &move) {
     auto newGrid = grid;
     newGrid[move.pos] = move.dice;
     for (const auto & c : move.captures)
-        if (c != 11)
-            newGrid[c] = 0;
+        newGrid[c] = 0;
     return newGrid;
 }
 
@@ -235,6 +244,7 @@ Result get_result(const Solutions &solutions) {
     return final_sum;
 }
 
+
 // 0 1 2
 // 3 4 5
 // 6 7 8
@@ -254,6 +264,20 @@ Neighbours get_neighbours(const Pos pos, const Grid &g) {
     throw runtime_error("Pos out of range!");
 }
 
+Captures get_capture_pos(const Pos pos) {
+    switch (pos) {
+        case 0 : return {1, 3};
+        case 1 : return {2, 4};
+        case 2 : return {5, 1};
+        case 3 : return {0, 4, 6};
+        case 4 : return {1, 5, 7, 3};
+        case 5 : return {2, 8, 4};
+        case 6 : return {3, 7};
+        case 7 : return {4, 8, 6};
+        case 8 : return {5, 7};
+    }
+    throw runtime_error("Pos out of range!");
+}
 Neighbours get_neighbours3(const Pos pos, const Grid &g) {
     switch (pos) {
         case 0 : return {11, g[1], g[3], 11};
