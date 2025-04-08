@@ -25,7 +25,12 @@ typedef uint32_t BoardHash;
 typedef vector<BoardHash> Solutions;
 
 typedef uint8_t Pos; // should be between 0..9, but idk how to type it
-typedef vector<Pos> Neighbours; // limited to 0..4, as above
+typedef struct {
+   Dice n;
+   Dice e;
+   Dice s;
+   Dice w;
+} Neighbours; // limited to 0..4, as above
 typedef Neighbours Captures;
 
 enum {
@@ -39,7 +44,7 @@ typedef uint8_t CaptureMask;
 typedef struct {
     Pos pos;
     Dice dice;
-    Captures captures = {0};
+    Captures captures = {11, 11, 11, 11};
 } Move;
 typedef vector<Move> PossibleMoves;
 
@@ -96,7 +101,7 @@ ostream& operator<<(ostream &os, const PossibleMoves &pm) {
     BoardHash get_solution(const Grid &grid);
 PossibleMoves get_possible_moves(const Grid &grid);
     Solutions check_all_moves(const Grid &grid, const Depth &depth);
-   Neighbours get_neighbours(Pos pos);
+   Neighbours get_neighbours(const Pos pos, const Grid &grid);
 
 
 unsigned long long get_result(const Solutions &solutions);
@@ -153,16 +158,16 @@ PossibleMoves get_possible_moves(const Grid &grid) {
         if (grid[i] == 0) pm.push_back({i, 1});
 
         cout << "NEIGHBOURS" << endl;
-        auto neighbours = get_neighbours(i);
-        for (auto n : neighbours)
-            cout << n << " ";
+        auto neighbours = get_neighbours(i, grid);
+        Dice * nn = reinterpret_cast<Dice *>(&neighbours);
+
+        for (uint8_t i = 0; i < 4; i++) {
+            cout << static_cast<int>(nn[i]) << ", ";
+        }
         cout << endl;
 
     }
     // expand with more filler moves - it gets complicated here
-
-
-
     return pm;
 }
 
@@ -206,17 +211,17 @@ Result get_result(const Solutions &solutions) {
 // 3 4 5
 // 6 7 8
 
-Neighbours get_neighbours(Pos pos) {
+Neighbours get_neighbours(const Pos pos, const Grid &g) {
     switch (pos) {
-        case 0 : return {1, 3};
-        case 1 : return {2, 4, 0};
-        case 2 : return {5, 1};
-        case 3 : return {0, 4, 6};
-        case 4 : return {1, 5, 7, 3};
-        case 5 : return {2, 8, 4};
-        case 6 : return {3, 7};
-        case 7 : return {4, 8, 6};
-        case 8 : return {5, 7};
+        case 0 : return {11, g[1], g[3], 11};
+        case 1 : return {11, g[2], g[4], g[0]};
+        case 2 : return {11, 11, g[5], g[1]};
+        case 3 : return {g[0], g[4], g[6], 11};
+        case 4 : return {g[1], g[5], g[7], g[3]};
+        case 5 : return {g[2], 11, g[8], g[4]};
+        case 6 : return {g[3], g[7], 11, 11};
+        case 7 : return {g[4], g[8], 11, g[6]};
+        case 8 : return {g[5], 11, 11, g[7]};
     }
     throw runtime_error("Pos out of range!");
 }
